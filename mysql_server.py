@@ -80,7 +80,7 @@ class MySQLConnection:
             self.connection.close()
             logging.info("Disconnected from MySQL database")
     
-    def execute_query(self, query: str) -> List[Dict[str, Any]]:
+    def execute_query(self, query: str):
         """Execute a SQL query and return results."""
         if not self.connection or not self.connection.is_connected():
             raise RuntimeError("Not connected to database")
@@ -97,18 +97,18 @@ class MySQLConnection:
         finally:
             cursor.close()
     
-    def get_tables(self) -> List[Dict[str, Any]]:
+    def get_tables(self):
         """Get list of tables in the database."""
         query = "SHOW TABLES"
         results = self.execute_query(query)
         return [{"table_name": list(row.values())[0]} for row in results]
     
-    def get_table_schema(self, table_name: str) -> List[Dict[str, Any]]:
+    def get_table_schema(self, table_name: str):
         """Get schema information for a specific table."""
         query = f"DESCRIBE `{table_name}`"
         return self.execute_query(query)
     
-    def get_databases(self) -> List[Dict[str, Any]]:
+    def get_databases(self):
         """Get list of all databases."""
         query = "SHOW DATABASES"
         results = self.execute_query(query)
@@ -119,6 +119,10 @@ class MySQLConnection:
         query_upper = query.upper().strip()
         return any(re.match(pattern, query_upper, re.IGNORECASE) for pattern in self.read_only_patterns)
     
+    def quote_identifier(self, identifier: str) -> str:
+        """Quote a MySQL identifier (table/column name) to prevent injection."""
+        return f"`{identifier.replace('`', '``')}`"
+
     def validate_table_name(self, table_name: str) -> str:
         """Validate and sanitize table name to prevent injection."""
         # Remove any dangerous characters and validate format
@@ -126,7 +130,7 @@ class MySQLConnection:
             raise ValueError(f"Invalid table name: {table_name}")
         return table_name
     
-    def execute_prepared_query(self, query: str, params: Optional[List] = None) -> List[Dict[str, Any]]:
+    def execute_prepared_query(self, query: str, params: Optional[List] = None):
         """Execute a prepared statement query with parameters."""
         if not self.connection or not self.connection.is_connected():
             raise RuntimeError("Not connected to database")
@@ -177,7 +181,7 @@ async def database_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
 mcp = FastMCP("MySQL MCP Server", lifespan=database_lifespan)
 
 @mcp.tool()
-def mysql_fragmentation_extensive_analysis(ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_fragmentation_extensive_analysis(ctx: Context, database_name: Optional[str] = None):
     """Provide a detailed analysis and defragmentation recommendations for tables."""
     try:
         db = ctx.lifespan["db"]
@@ -238,7 +242,7 @@ def mysql_fragmentation_extensive_analysis(ctx: Context, database_name: Optional
 
 
 @mcp.tool()
-def mysql_index_optimization_suggestions(ctx: Context) -> Dict[str, Any]:
+def mysql_index_optimization_suggestions(ctx: Context):
     """Suggest optimal indexing strategies and potential consolidations."""
     try:
         db = ctx.lifespan["db"]
@@ -279,7 +283,7 @@ def mysql_index_optimization_suggestions(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_historical_slow_query_analysis(ctx: Context, min_duration: Optional[float] = None) -> Dict[str, Any]:
+def mysql_historical_slow_query_analysis(ctx: Context, min_duration: Optional[float] = None):
     """Analyze and aggregate historical slow query patterns."""
     try:
         db = ctx.lifespan["db"]
@@ -309,7 +313,7 @@ def mysql_historical_slow_query_analysis(ctx: Context, min_duration: Optional[fl
 
 
 @mcp.tool()
-def mysql_buffer_pool_cache_diagnostics(ctx: Context) -> Dict[str, Any]:
+def mysql_buffer_pool_cache_diagnostics(ctx: Context):
     """Detailed diagnostics for buffer pool and cache tuning."""
     try:
         db = ctx.lifespan["db"]
@@ -341,7 +345,7 @@ def mysql_buffer_pool_cache_diagnostics(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_advanced_deadlock_detection(ctx: Context) -> Dict[str, Any]:
+def mysql_advanced_deadlock_detection(ctx: Context):
     """Enhanced detection and reporting of deadlock issues."""
     try:
         db = ctx.lifespan["db"]
@@ -369,7 +373,7 @@ def mysql_advanced_deadlock_detection(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_cross_database_fk_analysis(ctx: Context) -> Dict[str, Any]:
+def mysql_cross_database_fk_analysis(ctx: Context):
     """Analyze foreign key issues across databases."""
     try:
         db = ctx.lifespan["db"]
@@ -390,7 +394,7 @@ def mysql_cross_database_fk_analysis(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_statistical_anomaly_detection(ctx: Context) -> Dict[str, Any]:
+def mysql_statistical_anomaly_detection(ctx: Context):
     """Detect statistical anomalies in column distributions."""
     try:
         db = ctx.lifespan["db"]
@@ -411,7 +415,7 @@ def mysql_statistical_anomaly_detection(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_audit_log_summary(ctx: Context) -> Dict[str, Any]:
+def mysql_audit_log_summary(ctx: Context):
     """Summarize and detect anomalies within audit logs."""
     try:
         db = ctx.lifespan["db"]
@@ -432,7 +436,7 @@ def mysql_audit_log_summary(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_replication_lag_monitoring(ctx: Context) -> Dict[str, Any]:
+def mysql_replication_lag_monitoring(ctx: Context):
     """Monitor replication lag over a time series."""
     try:
         db = ctx.lifespan["db"]
@@ -456,7 +460,7 @@ def mysql_replication_lag_monitoring(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_privileges_security_audit(ctx: Context) -> Dict[str, Any]:
+def mysql_privileges_security_audit(ctx: Context):
     """Audit user privileges and recommend policy improvements."""
     try:
         db = ctx.lifespan["db"]
@@ -477,7 +481,7 @@ def mysql_privileges_security_audit(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_real_time_query_perf_metrics(ctx: Context) -> Dict[str, Any]:
+def mysql_real_time_query_perf_metrics(ctx: Context):
     """Provide real-time metrics on query performance and bottlenecks."""
     try:
         db = ctx.lifespan["db"]
@@ -498,7 +502,7 @@ def mysql_real_time_query_perf_metrics(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_adaptive_index_improvements(ctx: Context) -> Dict[str, Any]:
+def mysql_adaptive_index_improvements(ctx: Context):
     """Suggest adaptive index improvements based on query patterns."""
     try:
         db = ctx.lifespan["db"]
@@ -519,7 +523,7 @@ def mysql_adaptive_index_improvements(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_server_health_dashboard(ctx: Context) -> Dict[str, Any]:
+def mysql_server_health_dashboard(ctx: Context):
     """Create a dashboard displaying server health metrics."""
     try:
         db = ctx.lifespan["db"]
@@ -540,7 +544,7 @@ def mysql_server_health_dashboard(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_backup_health_check(ctx: Context) -> Dict[str, Any]:
+def mysql_backup_health_check(ctx: Context):
     """Perform a health check of backup strategies and configurations."""
     try:
         db = ctx.lifespan["db"]
@@ -559,7 +563,7 @@ def mysql_backup_health_check(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_partition_management_recommendations(ctx: Context) -> Dict[str, Any]:
+def mysql_partition_management_recommendations(ctx: Context):
     """Recommend partition management techniques."""
     try:
         db = ctx.lifespan["db"]
@@ -588,7 +592,7 @@ def mysql_partition_management_recommendations(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_dynamic_configuration_tuning(ctx: Context) -> Dict[str, Any]:
+def mysql_dynamic_configuration_tuning(ctx: Context):
     """Analyze and suggest dynamic configuration changes."""
     try:
         db = ctx.lifespan["db"]
@@ -617,7 +621,7 @@ def mysql_dynamic_configuration_tuning(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_innodb_metrics_analysis(ctx: Context) -> Dict[str, Any]:
+def mysql_innodb_metrics_analysis(ctx: Context):
     """Deep analysis of InnoDB metrics for performance tuning."""
     try:
         db = ctx.lifespan["db"]
@@ -637,7 +641,7 @@ def mysql_innodb_metrics_analysis(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_multi_tenancy_performance_insights(ctx: Context) -> Dict[str, Any]:
+def mysql_multi_tenancy_performance_insights(ctx: Context):
     """Insights and recommendations for multi-tenant databases."""
     try:
         db = ctx.lifespan["db"]
@@ -666,7 +670,7 @@ def mysql_multi_tenancy_performance_insights(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_ssl_tls_configuration_audit(ctx: Context) -> Dict[str, Any]:
+def mysql_ssl_tls_configuration_audit(ctx: Context):
     """Audit and improve SSL/TLS security configurations."""
     try:
         db = ctx.lifespan["db"]
@@ -694,7 +698,7 @@ def mysql_ssl_tls_configuration_audit(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_auto_index_rebuild_scheduler(ctx: Context) -> Dict[str, Any]:
+def mysql_auto_index_rebuild_scheduler(ctx: Context):
     """Automatically schedule index rebuilds based on usage patterns."""
     try:
         db = ctx.lifespan["db"]
@@ -721,7 +725,7 @@ def mysql_auto_index_rebuild_scheduler(ctx: Context) -> Dict[str, Any]:
             "error_type": type(e).__name__
         }
 @mcp.tool()
-async def mysql_user_statistics(ctx: Context) -> Dict[str, Any]:
+async def mysql_user_statistics(ctx: Context):
     """Show detailed user statistics like query counts and connection duration."""
     try:
         db = ctx.lifespan["db"]
@@ -736,7 +740,7 @@ async def mysql_user_statistics(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_list_open_transactions(ctx: Context) -> Dict[str, Any]:
+async def mysql_list_open_transactions(ctx: Context):
     """List current open transactions and their states."""
     try:
         db = ctx.lifespan["db"]
@@ -751,7 +755,7 @@ async def mysql_list_open_transactions(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_lock_wait_status(ctx: Context) -> Dict[str, Any]:
+async def mysql_lock_wait_status(ctx: Context):
     """Display status of locks and waits in the database."""
     try:
         db = ctx.lifespan["db"]
@@ -765,7 +769,7 @@ async def mysql_lock_wait_status(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_fragmentation_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_fragmentation_analysis(ctx: Context):
     """Show table and index fragmentation analysis."""
     try:
         db = ctx.lifespan["db"]
@@ -780,7 +784,7 @@ async def mysql_fragmentation_analysis(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_index_usage_statistics(ctx: Context) -> Dict[str, Any]:
+async def mysql_index_usage_statistics(ctx: Context):
     """Provide index usage statistics and suggestions for optimization."""
     try:
         db = ctx.lifespan["db"]
@@ -794,7 +798,7 @@ async def mysql_index_usage_statistics(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_slow_query_analysis(ctx: Context, limit: int = 10) -> Dict[str, Any]:
+async def mysql_slow_query_analysis(ctx: Context, limit: int = 10):
     """Analyze queries from the slow query log with summaries."""
     try:
         db = ctx.lifespan["db"]
@@ -809,7 +813,7 @@ async def mysql_slow_query_analysis(ctx: Context, limit: int = 10) -> Dict[str, 
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_stored_functions_procedures(ctx: Context) -> Dict[str, Any]:
+async def mysql_stored_functions_procedures(ctx: Context):
     """List all stored functions and procedures with metadata details."""
     try:
         db = ctx.lifespan["db"]
@@ -823,7 +827,7 @@ async def mysql_stored_functions_procedures(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_audit_logs(ctx: Context) -> Dict[str, Any]:
+async def mysql_audit_logs(ctx: Context):
     """Show audit logs if enabled or recent security events."""
     try:
         db = ctx.lifespan["db"]
@@ -838,7 +842,7 @@ async def mysql_audit_logs(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_running_events(ctx: Context) -> Dict[str, Any]:
+async def mysql_running_events(ctx: Context):
     """List all currently running events with schedules and status."""
     try:
         db = ctx.lifespan["db"]
@@ -852,7 +856,7 @@ async def mysql_running_events(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_triggers_by_event(ctx: Context) -> Dict[str, Any]:
+async def mysql_triggers_by_event(ctx: Context):
     """Show triggers grouped by event type or action."""
     try:
         db = ctx.lifespan["db"]
@@ -867,7 +871,7 @@ async def mysql_triggers_by_event(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_connection_monitor(ctx: Context) -> Dict[str, Any]:
+async def mysql_connection_monitor(ctx: Context):
     """Provide live monitoring of connections and resource usage."""
     try:
         db = ctx.lifespan["db"]
@@ -881,7 +885,7 @@ async def mysql_connection_monitor(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_stored_views_info(ctx: Context) -> Dict[str, Any]:
+async def mysql_stored_views_info(ctx: Context):
     """Display information about stored views in the database."""
     try:
         db = ctx.lifespan["db"]
@@ -896,7 +900,7 @@ async def mysql_stored_views_info(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_roles_and_privileges(ctx: Context) -> Dict[str, Any]:
+async def mysql_roles_and_privileges(ctx: Context):
     """List database roles and their privileges."""
     try:
         db = ctx.lifespan["db"]
@@ -910,7 +914,7 @@ async def mysql_roles_and_privileges(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_grants_for_entities(ctx: Context) -> Dict[str, Any]:
+async def mysql_grants_for_entities(ctx: Context):
     """Show grants assigned to roles and users."""
     try:
         db = ctx.lifespan["db"]
@@ -925,7 +929,7 @@ async def mysql_grants_for_entities(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_unused_duplicate_indexes(ctx: Context) -> Dict[str, Any]:
+async def mysql_unused_duplicate_indexes(ctx: Context):
     """Identify unused or duplicate indexes that could be dropped."""
     try:
         db = ctx.lifespan["db"]
@@ -939,7 +943,7 @@ async def mysql_unused_duplicate_indexes(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_tables_without_primary_keys(ctx: Context) -> Dict[str, Any]:
+async def mysql_tables_without_primary_keys(ctx: Context):
     """List tables without primary keys and recommendations."""
     try:
         db = ctx.lifespan["db"]
@@ -954,7 +958,7 @@ async def mysql_tables_without_primary_keys(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_table_statistics(ctx: Context) -> Dict[str, Any]:
+async def mysql_table_statistics(ctx: Context):
     """Provide info about table statistics like row counts and sizes."""
     try:
         db = ctx.lifespan["db"]
@@ -968,7 +972,7 @@ async def mysql_table_statistics(ctx: Context) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 @mcp.tool()
-async def mysql_replication_binary_log_status(ctx: Context) -> Dict[str, Any]:
+async def mysql_replication_binary_log_status(ctx: Context):
     """Show replication and binary log status details."""
     try:
         db = ctx.lifespan["db"]
@@ -983,7 +987,7 @@ async def mysql_replication_binary_log_status(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_buffer_pool_statistics(ctx: Context) -> Dict[str, Any]:
+async def mysql_buffer_pool_statistics(ctx: Context):
     """Display buffer pool and cache usage statistics."""
     try:
         db = ctx.lifespan["db"]
@@ -998,7 +1002,7 @@ async def mysql_buffer_pool_statistics(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_diagnostics_summary(ctx: Context) -> Dict[str, Any]:
+async def mysql_diagnostics_summary(ctx: Context):
     """Provide detailed diagnostics combining multiple status metrics."""
     try:
         db = ctx.lifespan["db"]
@@ -1018,7 +1022,7 @@ async def mysql_diagnostics_summary(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_query(query: str, ctx: Context, params: Optional[List] = None) -> Dict[str, Any]:
+def mysql_query(query: str, ctx: Context, params: Optional[List] = None):
     """Execute read-only MySQL queries.
 
     Args:
@@ -1051,7 +1055,7 @@ def mysql_query(query: str, ctx: Context, params: Optional[List] = None) -> Dict
 
 
 @mcp.tool()
-def list_mysql_tables(ctx: Context) -> Dict[str, Any]:
+def list_mysql_tables(ctx: Context):
     """List all tables in the current MySQL database.
 
     Returns:
@@ -1075,7 +1079,7 @@ def list_mysql_tables(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_schema(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_table_schema(table_name: str, ctx: Context):
     """Get detailed schema information for a MySQL table.
 
     Args:
@@ -1102,7 +1106,7 @@ def mysql_table_schema(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_data(table_name: str, ctx: Context, limit: int = 10) -> Dict[str, Any]:
+def mysql_table_data(table_name: str, ctx: Context, limit: int = 10):
     """Fetch sample data from a MySQL table.
 
     Args:
@@ -1132,7 +1136,7 @@ def mysql_table_data(table_name: str, ctx: Context, limit: int = 10) -> Dict[str
 
 
 @mcp.tool()
-def mysql_databases(ctx: Context) -> Dict[str, Any]:
+def mysql_databases(ctx: Context):
     """List all databases accessible to the current user.
 
     Returns:
@@ -1156,7 +1160,7 @@ def mysql_databases(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_indexes(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_table_indexes(table_name: str, ctx: Context):
     """Show all indexes for a specific table.
 
     Args:
@@ -1185,7 +1189,7 @@ def mysql_table_indexes(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_size(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_table_size(table_name: str, ctx: Context):
     """Get storage size information for a table.
 
     Args:
@@ -1222,7 +1226,7 @@ def mysql_table_size(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_user_privileges(ctx: Context) -> Dict[str, Any]:
+def mysql_user_privileges(ctx: Context):
     """Show current user's privileges.
 
     Returns:
@@ -1246,7 +1250,7 @@ def mysql_user_privileges(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_process_list(ctx: Context) -> Dict[str, Any]:
+def mysql_process_list(ctx: Context):
     """Show active MySQL connections and processes.
 
     Returns:
@@ -1271,7 +1275,7 @@ def mysql_process_list(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_status(ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_table_status(ctx: Context, database_name: Optional[str] = None):
     """Get comprehensive status information for tables.
 
     Args:
@@ -1303,7 +1307,7 @@ def mysql_table_status(ctx: Context, database_name: Optional[str] = None) -> Dic
 
 
 @mcp.tool()
-def mysql_variables(ctx: Context, pattern: Optional[str] = None) -> Dict[str, Any]:
+def mysql_variables(ctx: Context, pattern: Optional[str] = None):
     """Show MySQL system variables.
 
     Args:
@@ -1335,7 +1339,7 @@ def mysql_variables(ctx: Context, pattern: Optional[str] = None) -> Dict[str, An
 
 
 @mcp.tool()
-def mysql_charset_collation(ctx: Context) -> Dict[str, Any]:
+def mysql_charset_collation(ctx: Context):
     """Show available character sets and collations.
 
     Returns:
@@ -1362,7 +1366,7 @@ def mysql_charset_collation(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_constraints(table_name: str, ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_table_constraints(table_name: str, ctx: Context, database_name: Optional[str] = None):
     """Show foreign key and check constraints for a table.
 
     Args:
@@ -1401,7 +1405,7 @@ def mysql_table_constraints(table_name: str, ctx: Context, database_name: Option
 
 
 @mcp.tool()
-def mysql_column_stats(table_name: str, ctx: Context, column_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_column_stats(table_name: str, ctx: Context, column_name: Optional[str] = None):
     """Get column statistics and data distribution.
 
     Args:
@@ -1440,7 +1444,7 @@ def mysql_column_stats(table_name: str, ctx: Context, column_name: Optional[str]
 
 
 @mcp.tool()
-def mysql_explain_query(query: str, ctx: Context) -> Dict[str, Any]:
+def mysql_explain_query(query: str, ctx: Context):
     """Analyze query execution plan.
 
     Args:
@@ -1471,7 +1475,7 @@ def mysql_explain_query(query: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_search_tables(column_pattern: str, ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_search_tables(column_pattern: str, ctx: Context, database_name: Optional[str] = None):
     """Search for tables containing specific column names.
 
     Args:
@@ -1509,7 +1513,7 @@ def mysql_search_tables(column_pattern: str, ctx: Context, database_name: Option
 
 
 @mcp.tool()
-def mysql_backup_info(ctx: Context) -> Dict[str, Any]:
+def mysql_backup_info(ctx: Context):
     """Get information about database backup status.
 
     Returns:
@@ -1556,7 +1560,7 @@ def mysql_backup_info(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_replication_status(ctx: Context) -> Dict[str, Any]:
+def mysql_replication_status(ctx: Context):
     """Show MySQL replication status.
 
     Returns:
@@ -1593,7 +1597,7 @@ def mysql_replication_status(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_query_cache_stats(ctx: Context) -> Dict[str, Any]:
+def mysql_query_cache_stats(ctx: Context):
     """Show query cache statistics.
 
     Returns:
@@ -1632,7 +1636,7 @@ def mysql_query_cache_stats(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_dependencies(ctx: Context, table_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_table_dependencies(ctx: Context, table_name: Optional[str] = None):
     """Find foreign key dependencies between tables.
 
     Args:
@@ -1671,7 +1675,7 @@ def mysql_table_dependencies(ctx: Context, table_name: Optional[str] = None) -> 
 # Advanced MySQL Diagnostic Tools
 
 @mcp.tool()
-def mysql_slow_queries(ctx: Context, limit: int = 20, min_duration: Optional[float] = None) -> Dict[str, Any]:
+def mysql_slow_queries(ctx: Context, limit: int = 20, min_duration: Optional[float] = None):
     """Analyze slow query log entries.
 
     Args:
@@ -1715,7 +1719,7 @@ def mysql_slow_queries(ctx: Context, limit: int = 20, min_duration: Optional[flo
 
 
 @mcp.tool()
-def mysql_deadlock_detection(ctx: Context) -> Dict[str, Any]:
+def mysql_deadlock_detection(ctx: Context):
     """Detect and analyze table deadlocks.
 
     Returns:
@@ -1751,7 +1755,7 @@ def mysql_deadlock_detection(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_partition_info(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_partition_info(table_name: str, ctx: Context):
     """Show table partitioning information.
 
     Args:
@@ -1795,7 +1799,7 @@ def mysql_partition_info(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_trigger_list(ctx: Context, table_name: Optional[str] = None, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_trigger_list(ctx: Context, table_name: Optional[str] = None, database_name: Optional[str] = None):
     """List triggers for database or specific table.
 
     Args:
@@ -1840,7 +1844,7 @@ def mysql_trigger_list(ctx: Context, table_name: Optional[str] = None, database_
 
 
 @mcp.tool()
-def mysql_stored_procedures(ctx: Context, database_name: Optional[str] = None, routine_type: Optional[str] = None) -> Dict[str, Any]:
+def mysql_stored_procedures(ctx: Context, database_name: Optional[str] = None, routine_type: Optional[str] = None):
     """List stored procedures and functions.
 
     Args:
@@ -1887,7 +1891,7 @@ def mysql_stored_procedures(ctx: Context, database_name: Optional[str] = None, r
 
 
 @mcp.tool()
-def mysql_event_scheduler(ctx: Context) -> Dict[str, Any]:
+def mysql_event_scheduler(ctx: Context):
     """Show scheduled events information.
 
     Returns:
@@ -1927,7 +1931,7 @@ def mysql_event_scheduler(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_binary_logs(ctx: Context) -> Dict[str, Any]:
+def mysql_binary_logs(ctx: Context):
     """List binary log files and positions.
 
     Returns:
@@ -1952,7 +1956,7 @@ def mysql_binary_logs(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_engine_status(ctx: Context, engine_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_engine_status(ctx: Context, engine_name: Optional[str] = None):
     """Show storage engine status information.
 
     Args:
@@ -1982,7 +1986,7 @@ def mysql_engine_status(ctx: Context, engine_name: Optional[str] = None) -> Dict
 
 
 @mcp.tool()
-def mysql_table_locks(ctx: Context) -> Dict[str, Any]:
+def mysql_table_locks(ctx: Context):
     """Show current table locks and waiting processes.
 
     Returns:
@@ -2017,7 +2021,7 @@ def mysql_table_locks(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_lock_contention(ctx: Context) -> Dict[str, Any]:
+def mysql_lock_contention(ctx: Context):
     """Analyze lock contention and waits.
 
     Returns:
@@ -2054,7 +2058,7 @@ def mysql_lock_contention(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_connection_statistics(ctx: Context) -> Dict[str, Any]:
+def mysql_connection_statistics(ctx: Context):
     """Analyze connection patterns and statistics.
 
     Returns:
@@ -2083,7 +2087,7 @@ def mysql_connection_statistics(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_schema_unused_indexes(ctx: Context) -> Dict[str, Any]:
+def mysql_schema_unused_indexes(ctx: Context):
     """Identify unused indexes in the schema.
 
     Returns:
@@ -2119,7 +2123,7 @@ def mysql_schema_unused_indexes(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_memory_usage(ctx: Context) -> Dict[str, Any]:
+def mysql_memory_usage(ctx: Context):
     """Show memory usage by database objects.
 
     Returns:
@@ -2155,7 +2159,7 @@ def mysql_memory_usage(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_io_statistics(ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_io_statistics(ctx: Context, database_name: Optional[str] = None):
     """Show I/O statistics for tables and indexes.
 
     Args:
@@ -2207,7 +2211,7 @@ def mysql_io_statistics(ctx: Context, database_name: Optional[str] = None) -> Di
 
 
 @mcp.tool()
-def mysql_key_cache_status(ctx: Context) -> Dict[str, Any]:
+def mysql_key_cache_status(ctx: Context):
     """Show key cache status and statistics.
 
     Returns:
@@ -2233,7 +2237,7 @@ def mysql_key_cache_status(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_auto_increment_info(ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_auto_increment_info(ctx: Context, database_name: Optional[str] = None):
     """Show auto-increment information for tables.
 
     Args:
@@ -2279,7 +2283,7 @@ def mysql_auto_increment_info(ctx: Context, database_name: Optional[str] = None)
 
 
 @mcp.tool()
-def mysql_fulltext_indexes(ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_fulltext_indexes(ctx: Context, database_name: Optional[str] = None):
     """List full-text search indexes.
 
     Args:
@@ -2327,7 +2331,7 @@ def mysql_fulltext_indexes(ctx: Context, database_name: Optional[str] = None) ->
 
 
 @mcp.tool()
-def mysql_performance_recommendations(ctx: Context) -> Dict[str, Any]:
+def mysql_performance_recommendations(ctx: Context):
     """Generate performance recommendations based on current database state.
 
     Returns:
@@ -2395,7 +2399,7 @@ def mysql_performance_recommendations(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_security_audit(ctx: Context) -> Dict[str, Any]:
+def mysql_security_audit(ctx: Context):
     """Perform basic security audit of MySQL configuration and users.
 
     Returns:
@@ -2464,7 +2468,7 @@ def mysql_security_audit(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_table_fragmentation(ctx: Context, database_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_table_fragmentation(ctx: Context, database_name: Optional[str] = None):
     """Analyze table fragmentation and suggest optimization.
 
     Args:
@@ -2533,7 +2537,7 @@ def mysql_table_fragmentation(ctx: Context, database_name: Optional[str] = None)
 
 
 @mcp.tool()
-def mysql_query_analysis(query: str, ctx: Context) -> Dict[str, Any]:
+def mysql_query_analysis(query: str, ctx: Context):
     """Comprehensive query analysis including execution plan and recommendations.
 
     Args:
@@ -2611,7 +2615,7 @@ def mysql_query_analysis(query: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_diagnostics_info(ctx: Context) -> Dict[str, Any]:
+def mysql_diagnostics_info(ctx: Context):
     """Run comprehensive diagnostics and retrieve aggregated info.
 
     Returns:
@@ -2656,7 +2660,7 @@ def mysql_diagnostics_info(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_json_validation(table_name: str, ctx: Context, column_name: Optional[str] = None) -> Dict[str, Any]:
+def mysql_json_validation(table_name: str, ctx: Context, column_name: Optional[str] = None):
     """Validate JSON columns and data.
 
     Args:
@@ -2724,7 +2728,7 @@ def mysql_json_validation(table_name: str, ctx: Context, column_name: Optional[s
 
 
 @mcp.tool()
-def mysql_create_database(database_name: str, ctx: Context, charset: str = "utf8mb4", collation: str = "utf8mb4_unicode_ci") -> Dict[str, Any]:
+def mysql_create_database(database_name: str, ctx: Context, charset: str = "utf8mb4", collation: str = "utf8mb4_unicode_ci"):
     """Create a new MySQL database.
 
     Args:
@@ -2761,7 +2765,7 @@ def mysql_create_database(database_name: str, ctx: Context, charset: str = "utf8
 
 
 @mcp.tool()
-def mysql_drop_database(database_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_drop_database(database_name: str, ctx: Context):
     """Drop a MySQL database (USE WITH CAUTION!).
 
     Args:
@@ -2799,7 +2803,7 @@ def mysql_drop_database(database_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_create_table(table_name: str, columns: List[Dict[str, str]], ctx: Context, engine: str = "InnoDB") -> Dict[str, Any]:
+def mysql_create_table(table_name: str, columns: List[Dict[str, str]], ctx: Context, engine: str = "InnoDB"):
     """Create a new table in the current database.
 
     Args:
@@ -2849,7 +2853,7 @@ def mysql_create_table(table_name: str, columns: List[Dict[str, str]], ctx: Cont
 
 
 @mcp.tool()
-def mysql_insert_data(table_name: str, data: List[Dict[str, Any]], ctx: Context) -> Dict[str, Any]:
+def mysql_insert_data(table_name: str, data: List[Dict[str, Any]], ctx: Context):
     """Insert data into a table.
 
     Args:
@@ -2899,7 +2903,7 @@ def mysql_insert_data(table_name: str, data: List[Dict[str, Any]], ctx: Context)
 
 
 @mcp.tool()
-def mysql_update_data(table_name: str, set_values: Dict[str, Any], where_clause: str, ctx: Context, params: Optional[List] = None) -> Dict[str, Any]:
+def mysql_update_data(table_name: str, set_values: Dict[str, Any], where_clause: str, ctx: Context, params: Optional[List] = None):
     """Update data in a table.
 
     Args:
@@ -2950,7 +2954,7 @@ def mysql_update_data(table_name: str, set_values: Dict[str, Any], where_clause:
 
 
 @mcp.tool()
-def mysql_delete_data(table_name: str, where_clause: str, ctx: Context, params: Optional[List] = None) -> Dict[str, Any]:
+def mysql_delete_data(table_name: str, where_clause: str, ctx: Context, params: Optional[List] = None):
     """Delete data from a table.
 
     Args:
@@ -2984,7 +2988,7 @@ def mysql_delete_data(table_name: str, where_clause: str, ctx: Context, params: 
 
 
 @mcp.tool()
-def mysql_use_database(database_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_use_database(database_name: str, ctx: Context):
     """Switch to a different database.
 
     Args:
@@ -3017,7 +3021,7 @@ def mysql_use_database(database_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_drop_table(table_name: str, ctx: Context, if_exists: bool = True) -> Dict[str, Any]:
+def mysql_drop_table(table_name: str, ctx: Context, if_exists: bool = True):
     """Drop a table from the database.
 
     Args:
@@ -3050,7 +3054,7 @@ def mysql_drop_table(table_name: str, ctx: Context, if_exists: bool = True) -> D
 
 @mcp.tool()
 def mysql_alter_table_add_column(table_name: str, column_name: str, column_type: str, ctx: Context, 
-                                 constraints: Optional[str] = None, after_column: Optional[str] = None) -> Dict[str, Any]:
+                                 constraints: Optional[str] = None, after_column: Optional[str] = None):
     """Add a column to an existing table.
 
     Args:
@@ -3095,7 +3099,7 @@ def mysql_alter_table_add_column(table_name: str, column_name: str, column_type:
 
 
 @mcp.tool()
-def mysql_alter_table_drop_column(table_name: str, column_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_alter_table_drop_column(table_name: str, column_name: str, ctx: Context):
     """Drop a column from an existing table.
 
     Args:
@@ -3132,7 +3136,7 @@ def mysql_alter_table_drop_column(table_name: str, column_name: str, ctx: Contex
 
 @mcp.tool()
 def mysql_alter_table_modify_column(table_name: str, column_name: str, new_column_type: str, 
-                                   ctx: Context, constraints: Optional[str] = None) -> Dict[str, Any]:
+                                   ctx: Context, constraints: Optional[str] = None):
     """Modify a column in an existing table.
 
     Args:
@@ -3174,7 +3178,7 @@ def mysql_alter_table_modify_column(table_name: str, column_name: str, new_colum
 
 
 @mcp.tool()
-def mysql_rename_table(old_table_name: str, new_table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_rename_table(old_table_name: str, new_table_name: str, ctx: Context):
     """Rename a table.
 
     Args:
@@ -3207,7 +3211,7 @@ def mysql_rename_table(old_table_name: str, new_table_name: str, ctx: Context) -
 
 
 @mcp.tool()
-def mysql_truncate_table(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_truncate_table(table_name: str, ctx: Context):
     """Truncate a table (remove all rows quickly).
 
     Args:
@@ -3238,7 +3242,7 @@ def mysql_truncate_table(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 @mcp.tool()
 def mysql_create_index(table_name: str, index_name: str, columns: List[str], ctx: Context, 
-                      unique: bool = False, index_type: Optional[str] = None) -> Dict[str, Any]:
+                      unique: bool = False, index_type: Optional[str] = None):
     """Create an index on a table.
 
     Args:
@@ -3288,7 +3292,7 @@ def mysql_create_index(table_name: str, index_name: str, columns: List[str], ctx
 
 
 @mcp.tool()
-def mysql_drop_index(table_name: str, index_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_drop_index(table_name: str, index_name: str, ctx: Context):
     """Drop an index from a table.
 
     Args:
@@ -3324,7 +3328,7 @@ def mysql_drop_index(table_name: str, index_name: str, ctx: Context) -> Dict[str
 
 
 @mcp.tool()
-def mysql_add_primary_key(table_name: str, columns: List[str], ctx: Context) -> Dict[str, Any]:
+def mysql_add_primary_key(table_name: str, columns: List[str], ctx: Context):
     """Add a primary key to a table.
 
     Args:
@@ -3362,7 +3366,7 @@ def mysql_add_primary_key(table_name: str, columns: List[str], ctx: Context) -> 
 
 
 @mcp.tool()
-def mysql_drop_primary_key(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_drop_primary_key(table_name: str, ctx: Context):
     """Drop the primary key from a table.
 
     Args:
@@ -3394,7 +3398,7 @@ def mysql_drop_primary_key(table_name: str, ctx: Context) -> Dict[str, Any]:
 @mcp.tool()
 def mysql_add_foreign_key(table_name: str, constraint_name: str, columns: List[str], 
                          ref_table: str, ref_columns: List[str], ctx: Context,
-                         on_delete: Optional[str] = None, on_update: Optional[str] = None) -> Dict[str, Any]:
+                         on_delete: Optional[str] = None, on_update: Optional[str] = None):
     """Add a foreign key constraint to a table.
 
     Args:
@@ -3453,7 +3457,7 @@ def mysql_add_foreign_key(table_name: str, constraint_name: str, columns: List[s
 
 
 @mcp.tool()
-def mysql_drop_foreign_key(table_name: str, constraint_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_drop_foreign_key(table_name: str, constraint_name: str, ctx: Context):
     """Drop a foreign key constraint from a table.
 
     Args:
@@ -3489,7 +3493,7 @@ def mysql_drop_foreign_key(table_name: str, constraint_name: str, ctx: Context) 
 
 
 @mcp.tool()
-def mysql_create_view(view_name: str, query: str, ctx: Context, replace: bool = False) -> Dict[str, Any]:
+def mysql_create_view(view_name: str, query: str, ctx: Context, replace: bool = False):
     """Create a view in the database.
 
     Args:
@@ -3530,7 +3534,7 @@ def mysql_create_view(view_name: str, query: str, ctx: Context, replace: bool = 
 
 
 @mcp.tool()
-def mysql_drop_view(view_name: str, ctx: Context, if_exists: bool = True) -> Dict[str, Any]:
+def mysql_drop_view(view_name: str, ctx: Context, if_exists: bool = True):
     """Drop a view from the database.
 
     Args:
@@ -3565,7 +3569,7 @@ def mysql_drop_view(view_name: str, ctx: Context, if_exists: bool = True) -> Dic
 
 
 @mcp.tool()
-def mysql_optimize_table(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_optimize_table(table_name: str, ctx: Context):
     """Optimize a table to reclaim unused space and defragment.
 
     Args:
@@ -3596,7 +3600,7 @@ def mysql_optimize_table(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_analyze_table(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_analyze_table(table_name: str, ctx: Context):
     """Analyze a table to update key distribution statistics.
 
     Args:
@@ -3627,7 +3631,7 @@ def mysql_analyze_table(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_repair_table(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_repair_table(table_name: str, ctx: Context):
     """Repair a possibly corrupted table.
 
     Args:
@@ -3658,7 +3662,7 @@ def mysql_repair_table(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_check_table(table_name: str, ctx: Context, check_type: str = "MEDIUM") -> Dict[str, Any]:
+def mysql_check_table(table_name: str, ctx: Context, check_type: str = "MEDIUM"):
     """Check a table for errors.
 
     Args:
@@ -3696,7 +3700,7 @@ def mysql_check_table(table_name: str, ctx: Context, check_type: str = "MEDIUM")
 
 
 @mcp.tool()
-def mysql_show_create_table(table_name: str, ctx: Context) -> Dict[str, Any]:
+def mysql_show_create_table(table_name: str, ctx: Context):
     """Show the CREATE TABLE statement for a table.
 
     Args:
@@ -3727,7 +3731,7 @@ def mysql_show_create_table(table_name: str, ctx: Context) -> Dict[str, Any]:
 
 @mcp.tool()
 def mysql_copy_table(source_table: str, dest_table: str, ctx: Context, 
-                   copy_data: bool = True, if_not_exists: bool = True) -> Dict[str, Any]:
+                   copy_data: bool = True, if_not_exists: bool = True):
     """Copy a table structure and optionally its data.
 
     Args:
@@ -3771,7 +3775,7 @@ def mysql_copy_table(source_table: str, dest_table: str, ctx: Context,
 
 
 @mcp.tool()
-def mysql_create_user(username: str, password: str, host: str, ctx: Context) -> Dict[str, Any]:
+def mysql_create_user(username: str, password: str, host: str, ctx: Context):
     """Create a new MySQL user.
 
     Args:
@@ -3807,7 +3811,7 @@ def mysql_create_user(username: str, password: str, host: str, ctx: Context) -> 
 
 
 @mcp.tool()
-def mysql_drop_user(username: str, host: str, ctx: Context) -> Dict[str, Any]:
+def mysql_drop_user(username: str, host: str, ctx: Context):
     """Drop a MySQL user.
 
     Args:
@@ -3843,7 +3847,7 @@ def mysql_drop_user(username: str, host: str, ctx: Context) -> Dict[str, Any]:
 
 @mcp.tool()
 def mysql_grant_privileges(username: str, host: str, privileges: str, database: str, ctx: Context, 
-                          table: Optional[str] = None) -> Dict[str, Any]:
+                          table: Optional[str] = None):
     """Grant privileges to a MySQL user.
 
     Args:
@@ -3894,7 +3898,7 @@ def mysql_grant_privileges(username: str, host: str, privileges: str, database: 
 
 @mcp.tool()
 def mysql_revoke_privileges(username: str, host: str, privileges: str, database: str, ctx: Context,
-                           table: Optional[str] = None) -> Dict[str, Any]:
+                           table: Optional[str] = None):
     """Revoke privileges from a MySQL user.
 
     Args:
@@ -3944,7 +3948,7 @@ def mysql_revoke_privileges(username: str, host: str, privileges: str, database:
 
 
 @mcp.tool()
-def mysql_show_users(ctx: Context) -> Dict[str, Any]:
+def mysql_show_users(ctx: Context):
     """Show all MySQL users.
 
     Returns:
@@ -3969,7 +3973,7 @@ def mysql_show_users(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_show_user_privileges(username: str, host: str, ctx: Context) -> Dict[str, Any]:
+def mysql_show_user_privileges(username: str, host: str, ctx: Context):
     """Show privileges for a specific user.
 
     Args:
@@ -4001,7 +4005,7 @@ def mysql_show_user_privileges(username: str, host: str, ctx: Context) -> Dict[s
 
 
 @mcp.tool()
-def mysql_change_user_password(username: str, host: str, new_password: str, ctx: Context) -> Dict[str, Any]:
+def mysql_change_user_password(username: str, host: str, new_password: str, ctx: Context):
     """Change password for a MySQL user.
 
     Args:
@@ -4037,7 +4041,7 @@ def mysql_change_user_password(username: str, host: str, new_password: str, ctx:
 
 
 @mcp.tool()
-def mysql_flush_privileges(ctx: Context) -> Dict[str, Any]:
+def mysql_flush_privileges(ctx: Context):
     """Flush MySQL privileges to reload grant tables.
 
     Returns:
@@ -4060,7 +4064,7 @@ def mysql_flush_privileges(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_show_status(ctx: Context, pattern: Optional[str] = None) -> Dict[str, Any]:
+def mysql_show_status(ctx: Context, pattern: Optional[str] = None):
     """Show MySQL server status variables.
 
     Args:
@@ -4093,7 +4097,7 @@ def mysql_show_status(ctx: Context, pattern: Optional[str] = None) -> Dict[str, 
 
 
 @mcp.tool()
-def mysql_show_engines(ctx: Context) -> Dict[str, Any]:
+def mysql_show_engines(ctx: Context):
     """Show available storage engines.
 
     Returns:
@@ -4118,7 +4122,7 @@ def mysql_show_engines(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_show_warnings(ctx: Context) -> Dict[str, Any]:
+def mysql_show_warnings(ctx: Context):
     """Show MySQL warnings from the last statement.
 
     Returns:
@@ -4143,7 +4147,7 @@ def mysql_show_warnings(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_show_errors(ctx: Context) -> Dict[str, Any]:
+def mysql_show_errors(ctx: Context):
     """Show MySQL errors from the last statement.
 
     Returns:
@@ -4168,7 +4172,7 @@ def mysql_show_errors(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_kill_process(process_id: int, ctx: Context) -> Dict[str, Any]:
+def mysql_kill_process(process_id: int, ctx: Context):
     """Kill a MySQL process.
 
     Args:
@@ -4197,7 +4201,7 @@ def mysql_kill_process(process_id: int, ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_set_variable(variable_name: str, value: str, ctx: Context, global_scope: bool = False) -> Dict[str, Any]:
+def mysql_set_variable(variable_name: str, value: str, ctx: Context, global_scope: bool = False):
     """Set a MySQL variable.
 
     Args:
@@ -4231,7 +4235,7 @@ def mysql_set_variable(variable_name: str, value: str, ctx: Context, global_scop
 
 
 @mcp.tool()
-def mysql_reset_query_cache(ctx: Context) -> Dict[str, Any]:
+def mysql_reset_query_cache(ctx: Context):
     """Reset (clear) the query cache.
 
     Returns:
@@ -4254,7 +4258,7 @@ def mysql_reset_query_cache(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_flush_logs(ctx: Context) -> Dict[str, Any]:
+def mysql_flush_logs(ctx: Context):
     """Flush MySQL logs.
 
     Returns:
@@ -4277,7 +4281,7 @@ def mysql_flush_logs(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.tool()
-def mysql_flush_tables(ctx: Context, table_names: Optional[List[str]] = None) -> Dict[str, Any]:
+def mysql_flush_tables(ctx: Context, table_names: Optional[List[str]] = None):
     """Flush MySQL tables.
 
     Args:
@@ -4315,7 +4319,7 @@ def mysql_flush_tables(ctx: Context, table_names: Optional[List[str]] = None) ->
 
 
 @mcp.tool()
-def mysql_lock_tables(table_locks: List[Dict[str, str]], ctx: Context) -> Dict[str, Any]:
+def mysql_lock_tables(table_locks: List[Dict[str, str]], ctx: Context):
     """Lock tables for the current session.
 
     Args:
@@ -4358,7 +4362,7 @@ def mysql_lock_tables(table_locks: List[Dict[str, str]], ctx: Context) -> Dict[s
 
 
 @mcp.tool()
-def mysql_unlock_tables(ctx: Context) -> Dict[str, Any]:
+def mysql_unlock_tables(ctx: Context):
     """Unlock all tables for the current session.
 
     Returns:
@@ -4381,7 +4385,7 @@ def mysql_unlock_tables(ctx: Context) -> Dict[str, Any]:
 
 
 @mcp.resource("mysql://tables")
-def get_tables_resource() -> str:
+def get_tables_resource():
     """Resource providing list of all tables in the database."""
     return """# Database Tables
 
@@ -4396,7 +4400,7 @@ Example usage:
 
 
 @mcp.resource("mysql://schema/{table_name}")
-def get_table_schema_resource(table_name: str) -> str:
+def get_table_schema_resource(table_name: str):
     """Resource providing schema information for a specific table."""
     return f"""# Table Schema: {table_name}
 
@@ -4412,7 +4416,7 @@ Example usage:
 
 
 @mcp.tool()
-def show_table_status(ctx: Context, table_name: str = "") -> str:
+def show_table_status(ctx: Context, table_name: str = ""):
     """Show status information for tables.
     
     Args:
@@ -4448,7 +4452,7 @@ def show_table_status(ctx: Context, table_name: str = "") -> str:
 
 
 @mcp.tool()
-def show_create_table(ctx: Context, table_name: str) -> str:
+def show_create_table(ctx: Context, table_name: str):
     """Show the CREATE TABLE statement for a table.
     
     Args:
@@ -4468,7 +4472,7 @@ def show_create_table(ctx: Context, table_name: str) -> str:
 
 
 @mcp.tool()
-def show_create_database(ctx: Context, database_name: str) -> str:
+def show_create_database(ctx: Context, database_name: str):
     """Show the CREATE DATABASE statement for a database.
     
     Args:
@@ -4488,7 +4492,7 @@ def show_create_database(ctx: Context, database_name: str) -> str:
 
 
 @mcp.tool()
-def describe_table(ctx: Context, table_name: str) -> str:
+def describe_table(ctx: Context, table_name: str):
     """Describe table structure (same as SHOW COLUMNS).
     
     Args:
@@ -4512,7 +4516,7 @@ def describe_table(ctx: Context, table_name: str) -> str:
 
 
 @mcp.tool()
-def show_triggers(ctx: Context, table_name: str = "") -> str:
+def show_triggers(ctx: Context, table_name: str = ""):
     """Show triggers for a table or all triggers.
     
     Args:
@@ -4545,7 +4549,7 @@ def show_triggers(ctx: Context, table_name: str = "") -> str:
 
 
 @mcp.tool()
-def show_events(ctx: Context) -> str:
+def show_events(ctx: Context):
     """Show scheduled events in the database."""
     try:
         db = ctx.lifespan["db"]
@@ -4571,7 +4575,7 @@ def show_events(ctx: Context) -> str:
 
 
 @mcp.tool()
-def show_function_status(ctx: Context, function_name: str = "") -> str:
+def show_function_status(ctx: Context, function_name: str = ""):
     """Show status of stored functions.
     
     Args:
@@ -4605,7 +4609,7 @@ def show_function_status(ctx: Context, function_name: str = "") -> str:
 
 
 @mcp.tool()
-def show_procedure_status(ctx: Context, procedure_name: str = "") -> str:
+def show_procedure_status(ctx: Context, procedure_name: str = ""):
     """Show status of stored procedures.
     
     Args:
@@ -4639,7 +4643,7 @@ def show_procedure_status(ctx: Context, procedure_name: str = "") -> str:
 
 
 @mcp.tool()
-def show_binary_logs(ctx: Context) -> str:
+def show_binary_logs(ctx: Context):
     """Show binary log files."""
     try:
         db = ctx.lifespan["db"]
@@ -4659,7 +4663,7 @@ def show_binary_logs(ctx: Context) -> str:
 
 
 @mcp.tool()
-def show_master_status(ctx: Context) -> str:
+def show_master_status(ctx: Context):
     """Show master status for replication."""
     try:
         db = ctx.lifespan["db"]
@@ -4682,7 +4686,7 @@ def show_master_status(ctx: Context) -> str:
 
 
 @mcp.tool()
-def show_slave_status(ctx: Context) -> str:
+def show_slave_status(ctx: Context):
     """Show slave status for replication."""
     try:
         db = ctx.lifespan["db"]
@@ -4714,7 +4718,7 @@ def show_slave_status(ctx: Context) -> str:
 
 
 @mcp.tool()
-def show_character_sets(ctx: Context) -> str:
+def show_character_sets(ctx: Context):
     """Show available character sets."""
     try:
         db = ctx.lifespan["db"]
@@ -4734,7 +4738,7 @@ def show_character_sets(ctx: Context) -> str:
 
 
 @mcp.tool()
-def show_collations(ctx: Context, charset: str = "") -> str:
+def show_collations(ctx: Context, charset: str = ""):
     """Show available collations.
     
     Args:
@@ -4763,7 +4767,7 @@ def show_collations(ctx: Context, charset: str = "") -> str:
 
 
 @mcp.tool()
-async def show_table_types() -> str:
+async def show_table_types():
     """Show available table types (storage engines)."""
     async with get_mysql_connection() as conn:
         query = "SHOW TABLE TYPES"
@@ -4780,7 +4784,7 @@ async def show_table_types() -> str:
 
 
 @mcp.tool()
-async def show_open_tables(database_name: str = "") -> str:
+async def show_open_tables(database_name: str = ""):
     """Show open tables in the table cache.
     
     Args:
@@ -4804,7 +4808,7 @@ async def show_open_tables(database_name: str = "") -> str:
 
 
 @mcp.tool()
-async def show_session_variables(pattern: str = "") -> str:
+async def show_session_variables(pattern: str = ""):
     """Show session variables.
     
     Args:
@@ -4829,7 +4833,7 @@ async def show_session_variables(pattern: str = "") -> str:
 
 
 @mcp.tool()
-async def show_global_variables(pattern: str = "") -> str:
+async def show_global_variables(pattern: str = ""):
     """Show global variables.
     
     Args:
@@ -4854,7 +4858,7 @@ async def show_global_variables(pattern: str = "") -> str:
 
 
 @mcp.tool()
-async def explain_table(table_name: str) -> str:
+async def explain_table(table_name: str):
     """Explain table structure (alias for DESCRIBE).
     
     Args:
@@ -4864,7 +4868,7 @@ async def explain_table(table_name: str) -> str:
 
 
 @mcp.tool()
-async def show_table_indexes(table_name: str) -> str:
+async def show_table_indexes(table_name: str):
     """Show all indexes for a specific table.
     
     Args:
@@ -4909,7 +4913,7 @@ async def show_table_indexes(table_name: str) -> str:
 
 
 @mcp.tool()
-async def show_grants_for_user(username: str, hostname: str = "%") -> str:
+async def show_grants_for_user(username: str, hostname: str = "%"):
     """Show grants for a specific user.
     
     Args:
@@ -4935,7 +4939,7 @@ async def show_grants_for_user(username: str, hostname: str = "%") -> str:
 
 
 @mcp.tool()
-async def list_events() -> str:
+async def list_events():
     """List all scheduled events in the database."""
     async with get_mysql_connection() as conn:
         try:
@@ -4954,7 +4958,7 @@ async def list_events() -> str:
 
 
 @mcp.tool()
-async def create_event(event_name: str, schedule: str, sql_statement: str, starts: str = "", ends: str = "") -> str:
+async def create_event(event_name: str, schedule: str, sql_statement: str, starts: str = "", ends: str = ""):
     """Create a scheduled event.
     
     Args:
@@ -4987,7 +4991,7 @@ async def create_event(event_name: str, schedule: str, sql_statement: str, start
 
 
 @mcp.tool()
-async def drop_event(event_name: str) -> str:
+async def drop_event(event_name: str):
     """Drop a scheduled event.
     
     Args:
@@ -5005,7 +5009,7 @@ async def drop_event(event_name: str) -> str:
 
 
 @mcp.tool()
-async def alter_event(event_name: str, new_schedule: str = "", new_statement: str = "", enable: bool = None) -> str:
+async def alter_event(event_name: str, new_schedule: str = "", new_statement: str = "", enable: bool = None):
     """Alter a scheduled event.
     
     Args:
@@ -5040,7 +5044,7 @@ async def alter_event(event_name: str, new_schedule: str = "", new_statement: st
 
 
 @mcp.tool()
-async def list_partitions(table_name: str) -> str:
+async def list_partitions(table_name: str):
     """List partitions for a partitioned table.
     
     Args:
@@ -5073,7 +5077,7 @@ async def list_partitions(table_name: str) -> str:
 
 
 @mcp.tool()
-async def add_partition(table_name: str, partition_name: str, partition_value: str) -> str:
+async def add_partition(table_name: str, partition_name: str, partition_value: str):
     """Add a partition to a table.
     
     Args:
@@ -5094,7 +5098,7 @@ async def add_partition(table_name: str, partition_name: str, partition_value: s
 
 
 @mcp.tool()
-async def drop_partition(table_name: str, partition_name: str) -> str:
+async def drop_partition(table_name: str, partition_name: str):
     """Drop a partition from a table.
     
     Args:
@@ -5114,7 +5118,7 @@ async def drop_partition(table_name: str, partition_name: str) -> str:
 
 
 @mcp.tool()
-async def create_role(role_name: str) -> str:
+async def create_role(role_name: str):
     """Create a new role (MySQL 8.0+).
     
     Args:
@@ -5132,7 +5136,7 @@ async def create_role(role_name: str) -> str:
 
 
 @mcp.tool()
-async def drop_role(role_name: str) -> str:
+async def drop_role(role_name: str):
     """Drop a role (MySQL 8.0+).
     
     Args:
@@ -5150,7 +5154,7 @@ async def drop_role(role_name: str) -> str:
 
 
 @mcp.tool()
-async def grant_role_to_user(role_name: str, username: str, hostname: str = "%") -> str:
+async def grant_role_to_user(role_name: str, username: str, hostname: str = "%"):
     """Grant a role to a user (MySQL 8.0+).
     
     Args:
@@ -5171,7 +5175,7 @@ async def grant_role_to_user(role_name: str, username: str, hostname: str = "%")
 
 
 @mcp.tool()
-async def revoke_role_from_user(role_name: str, username: str, hostname: str = "%") -> str:
+async def revoke_role_from_user(role_name: str, username: str, hostname: str = "%"):
     """Revoke a role from a user (MySQL 8.0+).
     
     Args:
@@ -5192,7 +5196,7 @@ async def revoke_role_from_user(role_name: str, username: str, hostname: str = "
 
 
 @mcp.tool()
-async def show_roles() -> str:
+async def show_roles():
     """Show all roles in the database (MySQL 8.0+)."""
     async with get_mysql_connection() as conn:
         try:
@@ -5211,7 +5215,7 @@ async def show_roles() -> str:
 
 
 @mcp.tool()
-async def create_user_with_ssl(username: str, hostname: str, password: str, ssl_type: str = "SSL") -> str:
+async def create_user_with_ssl(username: str, hostname: str, password: str, ssl_type: str = "SSL"):
     """Create a user with SSL requirements.
     
     Args:
@@ -5238,7 +5242,7 @@ async def create_user_with_ssl(username: str, hostname: str, password: str, ssl_
 
 
 @mcp.tool()
-async def create_stored_procedure(proc_name: str, parameters: str, body: str) -> str:
+async def create_stored_procedure(proc_name: str, parameters: str, body: str):
     """Create a stored procedure.
     
     Args:
@@ -5266,7 +5270,7 @@ async def create_stored_procedure(proc_name: str, parameters: str, body: str) ->
 
 
 @mcp.tool()
-async def drop_stored_procedure(proc_name: str) -> str:
+async def drop_stored_procedure(proc_name: str):
     """Drop a stored procedure.
     
     Args:
@@ -5284,7 +5288,7 @@ async def drop_stored_procedure(proc_name: str) -> str:
 
 
 @mcp.tool()
-async def list_stored_procedures() -> str:
+async def list_stored_procedures():
     """List all stored procedures in the current database."""
     async with get_mysql_connection() as conn:
         try:
@@ -5313,7 +5317,7 @@ async def list_stored_procedures() -> str:
 
 
 @mcp.tool()
-async def create_function(func_name: str, parameters: str, return_type: str, body: str, deterministic: bool = False) -> str:
+async def create_function(func_name: str, parameters: str, return_type: str, body: str, deterministic: bool = False):
     """Create a stored function.
     
     Args:
@@ -5347,7 +5351,7 @@ async def create_function(func_name: str, parameters: str, return_type: str, bod
 
 
 @mcp.tool()
-async def drop_stored_function(func_name: str) -> str:
+async def drop_stored_function(func_name: str):
     """Drop a stored function.
     
     Args:
@@ -5365,7 +5369,7 @@ async def drop_stored_function(func_name: str) -> str:
 
 
 @mcp.tool()
-async def analyze_index_usage(table_name: str = "") -> str:
+async def analyze_index_usage(table_name: str = ""):
     """Analyze index usage statistics.
     
     Args:
@@ -5410,7 +5414,7 @@ async def analyze_index_usage(table_name: str = "") -> str:
 
 
 @mcp.tool()
-async def identify_redundant_indexes() -> str:
+async def identify_redundant_indexes():
     """Identify potentially redundant indexes."""
     async with get_mysql_connection() as conn:
         try:
@@ -5468,7 +5472,7 @@ async def identify_redundant_indexes() -> str:
 
 
 @mcp.tool()
-async def rebuild_table_indexes(table_name: str) -> str:
+async def rebuild_table_indexes(table_name: str):
     """Rebuild all indexes for a table.
     
     Args:
@@ -5486,7 +5490,7 @@ async def rebuild_table_indexes(table_name: str) -> str:
 
 
 @mcp.prompt()
-def generate_sql_query(task: str, table_name: str = "") -> str:
+def generate_sql_query(task: str, table_name: str = ""):
     """Generate SQL query based on task description.
     
     Args:
@@ -5506,7 +5510,7 @@ Make sure the query is safe and follows best practices."""
 
 
 @mcp.prompt()
-def analyze_query_performance(query: str) -> str:
+def analyze_query_performance(query: str):
     """Analyze SQL query performance and suggest optimizations.
     
     Args:
@@ -5565,7 +5569,7 @@ Usage:
 
 
 @mcp.tool()
-async def mysql_show_user_tables(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_user_tables(ctx: Context):
     """Show tables owned by the current MySQL user."""
     try:
         async with get_mysql_connection() as conn:
@@ -5585,7 +5589,7 @@ async def mysql_show_user_tables(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_table_engines(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_table_engines(ctx: Context):
     """Show available storage engines in the MySQL server."""
     try:
         async with get_mysql_connection() as conn:
@@ -5605,7 +5609,7 @@ async def mysql_show_table_engines(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_table_partitions(ctx: Context, table_name: str) -> Dict[str, Any]:
+async def mysql_show_table_partitions(ctx: Context, table_name: str):
     """Show partitioning information for a table if partitioned."""
     try:
         async with get_mysql_connection() as conn:
@@ -5635,7 +5639,7 @@ async def mysql_show_table_partitions(ctx: Context, table_name: str) -> Dict[str
         }
 
 @mcp.tool()
-async def mysql_show_table_constraints(ctx: Context, table_name: str) -> Dict[str, Any]:
+async def mysql_show_table_constraints(ctx: Context, table_name: str):
     """Show constraints for a given table (primary keys, unique, foreign keys)."""
     try:
         async with get_mysql_connection() as conn:
@@ -5664,7 +5668,7 @@ async def mysql_show_table_constraints(ctx: Context, table_name: str) -> Dict[st
         }
 
 @mcp.tool()
-async def mysql_show_foreign_keys(ctx: Context, table_name: str) -> Dict[str, Any]:
+async def mysql_show_foreign_keys(ctx: Context, table_name: str):
     """Show foreign key constraints for a table."""
     try:
         db = ctx.lifespan["db"]
@@ -5691,7 +5695,7 @@ async def mysql_show_foreign_keys(ctx: Context, table_name: str) -> Dict[str, An
         }
 
 @mcp.tool()
-async def mysql_show_check_constraints(ctx: Context, table_name: str) -> Dict[str, Any]:
+async def mysql_show_check_constraints(ctx: Context, table_name: str):
     """Show CHECK constraints for a table."""
     try:
         db = ctx.lifespan["db"]
@@ -5720,7 +5724,7 @@ async def mysql_show_check_constraints(ctx: Context, table_name: str) -> Dict[st
         }
 
 @mcp.tool()
-async def mysql_show_table_triggers(ctx: Context, table_name: str) -> Dict[str, Any]:
+async def mysql_show_table_triggers(ctx: Context, table_name: str):
     """List triggers defined on a table."""
     try:
         db = ctx.lifespan["db"]
@@ -5743,7 +5747,7 @@ async def mysql_show_table_triggers(ctx: Context, table_name: str) -> Dict[str, 
         }
 
 @mcp.tool()
-async def mysql_show_procedure_params(ctx: Context, procedure_name: str) -> Dict[str, Any]:
+async def mysql_show_procedure_params(ctx: Context, procedure_name: str):
     """Show parameters of a stored procedure."""
     try:
         db = ctx.lifespan["db"]
@@ -5770,7 +5774,7 @@ async def mysql_show_procedure_params(ctx: Context, procedure_name: str) -> Dict
         }
 
 @mcp.tool()
-async def mysql_show_function_params(ctx: Context, function_name: str) -> Dict[str, Any]:
+async def mysql_show_function_params(ctx: Context, function_name: str):
     """Show parameters of a stored function."""
     try:
         db = ctx.lifespan["db"]
@@ -5796,7 +5800,7 @@ async def mysql_show_function_params(ctx: Context, function_name: str) -> Dict[s
         }
 
 @mcp.tool()
-async def mysql_show_events(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_events(ctx: Context):
     """List all scheduled events."""
     try:
         db = ctx.lifespan["db"]
@@ -5816,7 +5820,7 @@ async def mysql_show_events(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_processlist(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_processlist(ctx: Context):
     """Show the current process list."""
     try:
         db = ctx.lifespan["db"]
@@ -5836,7 +5840,7 @@ async def mysql_show_processlist(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_status_variables(ctx: Context, pattern: str = None) -> Dict[str, Any]:
+async def mysql_show_status_variables(ctx: Context, pattern: str = None):
     """Show server status variables, optionally filtered by pattern."""
     try:
         db = ctx.lifespan["db"]
@@ -5861,7 +5865,7 @@ async def mysql_show_status_variables(ctx: Context, pattern: str = None) -> Dict
         }
 
 @mcp.tool()
-async def mysql_show_variables(ctx: Context, pattern: str = None) -> Dict[str, Any]:
+async def mysql_show_variables(ctx: Context, pattern: str = None):
     """Show server system variables, optionally filtered by pattern."""
     try:
         db = ctx.lifespan["db"]
@@ -5885,7 +5889,7 @@ async def mysql_show_variables(ctx: Context, pattern: str = None) -> Dict[str, A
         }
 
 @mcp.tool()
-async def mysql_show_tables_information(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_tables_information(ctx: Context):
     """Show comprehensive information about all tables in current database."""
     try:
         db = ctx.lifespan["db"]
@@ -5905,7 +5909,7 @@ async def mysql_show_tables_information(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_engines_status(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_engines_status(ctx: Context):
     """Show detailed status of all storage engines."""
     try:
         db = ctx.lifespan["db"]
@@ -5925,7 +5929,7 @@ async def mysql_show_engines_status(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_memory_status(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_memory_status(ctx: Context):
     """Show memory usage statistics."""
     try:
         db = ctx.lifespan["db"]
@@ -5945,7 +5949,7 @@ async def mysql_show_memory_status(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_replication_status(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_replication_status(ctx: Context):
     """Show replication status including master and slave."""
     try:
         db = ctx.lifespan["db"]
@@ -5975,7 +5979,7 @@ async def mysql_show_replication_status(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_show_error_log(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_error_log(ctx: Context):
     """Read the MySQL error log file content. (Requires file access privileges)"""
     import os
     try:
@@ -5992,7 +5996,7 @@ async def mysql_show_error_log(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_show_variables_status(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_variables_status(ctx: Context):
     """Show all MySQL variables and status in one combined report."""
     try:
         db = ctx.lifespan["db"]
@@ -6008,7 +6012,7 @@ async def mysql_show_variables_status(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_show_schemas(ctx: Context) -> Dict[str, Any]:
+async def mysql_show_schemas(ctx: Context):
     """Show all available database schemas."""
     try:
         db = ctx.lifespan["db"]
@@ -6024,7 +6028,7 @@ async def mysql_show_schemas(ctx: Context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": type(e).__name__}
 
 @mcp.tool()
-async def mysql_show_slow_log(ctx: Context, limit: int = 10) -> Dict[str, Any]:
+async def mysql_show_slow_log(ctx: Context, limit: int = 10):
     """Show recent entries from the slow query log."""
     try:
         db = ctx.lifespan["db"]
@@ -6040,7 +6044,7 @@ async def mysql_show_slow_log(ctx: Context, limit: int = 10) -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def mysql_query_cache_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_query_cache_analysis(ctx: Context):
     """Analyze query cache performance and configuration."""
     try:
         db = ctx.lifespan["db"]
@@ -6064,7 +6068,7 @@ async def mysql_query_cache_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_innodb_buffer_pool_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_innodb_buffer_pool_analysis(ctx: Context):
     """Detailed analysis of InnoDB buffer pool performance."""
     try:
         db = ctx.lifespan["db"]
@@ -6119,7 +6123,7 @@ async def mysql_innodb_buffer_pool_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_innodb_lock_waits(ctx: Context) -> Dict[str, Any]:
+async def mysql_innodb_lock_waits(ctx: Context):
     """Show detailed InnoDB lock wait information."""
     try:
         db = ctx.lifespan["db"]
@@ -6155,7 +6159,7 @@ async def mysql_innodb_lock_waits(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_table_compression_analysis(ctx: Context, schema_name: str = None) -> Dict[str, Any]:
+async def mysql_table_compression_analysis(ctx: Context, schema_name: str = None):
     """Analyze table compression ratios and storage efficiency."""
     try:
         db = ctx.lifespan["db"]
@@ -6196,7 +6200,7 @@ async def mysql_table_compression_analysis(ctx: Context, schema_name: str = None
         }
 
 @mcp.tool()
-async def mysql_connection_thread_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_connection_thread_analysis(ctx: Context):
     """Analyze connection threads and their resource usage."""
     try:
         db = ctx.lifespan["db"]
@@ -6249,7 +6253,7 @@ async def mysql_connection_thread_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_query_digest_analysis(ctx: Context, limit: int = 10) -> Dict[str, Any]:
+async def mysql_query_digest_analysis(ctx: Context, limit: int = 10):
     """Analyze query digest statistics for performance optimization."""
     try:
         db = ctx.lifespan["db"]
@@ -6303,7 +6307,7 @@ async def mysql_query_digest_analysis(ctx: Context, limit: int = 10) -> Dict[str
         }
 
 @mcp.tool()
-async def mysql_partition_performance_analysis(ctx: Context, schema_name: str = None, table_name: str = None) -> Dict[str, Any]:
+async def mysql_partition_performance_analysis(ctx: Context, schema_name: str = None, table_name: str = None):
     """Analyze partition performance and pruning effectiveness."""
     try:
         db = ctx.lifespan["db"]
@@ -6361,7 +6365,7 @@ async def mysql_partition_performance_analysis(ctx: Context, schema_name: str = 
         }
 
 @mcp.tool()
-async def mysql_foreign_key_dependency_analysis(ctx: Context, schema_name: str = None) -> Dict[str, Any]:
+async def mysql_foreign_key_dependency_analysis(ctx: Context, schema_name: str = None):
     """Analyze foreign key dependencies and referential integrity."""
     try:
         db = ctx.lifespan["db"]
@@ -6404,7 +6408,7 @@ async def mysql_foreign_key_dependency_analysis(ctx: Context, schema_name: str =
         }
 
 @mcp.tool()
-async def mysql_table_space_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_table_space_analysis(ctx: Context):
     """Analyze tablespace usage and file system layout."""
     try:
         db = ctx.lifespan["db"]
@@ -6441,7 +6445,7 @@ async def mysql_table_space_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_innodb_metrics_analysis(ctx: Context, metric_pattern: str = None) -> Dict[str, Any]:
+async def mysql_innodb_metrics_deep_analysis(ctx: Context, metric_pattern: str = None):
     """Analyze InnoDB performance metrics and counters."""
     try:
         db = ctx.lifespan["db"]
@@ -6484,7 +6488,7 @@ async def mysql_innodb_metrics_analysis(ctx: Context, metric_pattern: str = None
         }
 
 @mcp.tool()
-async def mysql_performance_schema_setup_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_performance_schema_setup_analysis(ctx: Context):
     """Analyze Performance Schema configuration and instrumentation setup."""
     try:
         db = ctx.lifespan["db"]
@@ -6531,7 +6535,7 @@ async def mysql_performance_schema_setup_analysis(ctx: Context) -> Dict[str, Any
         }
 
 @mcp.tool()
-async def mysql_memory_usage_by_thread(ctx: Context, limit: int = 20) -> Dict[str, Any]:
+async def mysql_memory_usage_by_thread(ctx: Context, limit: int = 20):
     """Analyze memory usage by thread for performance optimization."""
     try:
         db = ctx.lifespan["db"]
@@ -6571,7 +6575,7 @@ async def mysql_memory_usage_by_thread(ctx: Context, limit: int = 20) -> Dict[st
         }
 
 @mcp.tool()
-async def mysql_index_usage_effectiveness(ctx: Context, schema_name: str = None) -> Dict[str, Any]:
+async def mysql_index_usage_effectiveness(ctx: Context, schema_name: str = None):
     """Analyze index usage effectiveness and identify unused indexes."""
     try:
         db = ctx.lifespan["db"]
@@ -6618,7 +6622,7 @@ async def mysql_index_usage_effectiveness(ctx: Context, schema_name: str = None)
         }
 
 @mcp.tool()
-async def mysql_temp_table_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_temp_table_analysis(ctx: Context):
     """Analyze temporary table usage and identify optimization opportunities."""
     try:
         db = ctx.lifespan["db"]
@@ -6676,7 +6680,7 @@ async def mysql_temp_table_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_ssl_connection_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_ssl_connection_analysis(ctx: Context):
     """Analyze SSL/TLS connection configuration and usage."""
     try:
         db = ctx.lifespan["db"]
@@ -6725,7 +6729,7 @@ async def mysql_ssl_connection_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_charset_collation_analysis(ctx: Context, schema_name: str = None) -> Dict[str, Any]:
+async def mysql_charset_collation_analysis(ctx: Context, schema_name: str = None):
     """Analyze character set and collation usage across databases and tables."""
     try:
         db = ctx.lifespan["db"]
@@ -6805,7 +6809,7 @@ async def mysql_charset_collation_analysis(ctx: Context, schema_name: str = None
         }
 
 @mcp.tool()
-async def mysql_replication_lag_analysis(ctx: Context) -> Dict[str, Any]:
+async def mysql_replication_lag_analysis(ctx: Context):
     """Analyze replication lag and slave status for monitoring purposes."""
     try:
         db = ctx.lifespan["db"]
@@ -6879,7 +6883,7 @@ async def mysql_replication_lag_analysis(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_query_optimizer_analysis(ctx: Context, query: str) -> Dict[str, Any]:
+async def mysql_query_optimizer_analysis(ctx: Context, query: str):
     """Analyze query execution plan and optimizer decisions."""
     try:
         db = ctx.lifespan["db"]
@@ -6941,7 +6945,7 @@ async def mysql_query_optimizer_analysis(ctx: Context, query: str) -> Dict[str, 
         }
 
 @mcp.tool()
-async def mysql_comprehensive_health_check(ctx: Context) -> Dict[str, Any]:
+async def mysql_comprehensive_health_check(ctx: Context):
     """Perform a comprehensive MySQL server health check and diagnostics."""
     try:
         db = ctx.lifespan["db"]
@@ -7087,7 +7091,7 @@ async def mysql_comprehensive_health_check(ctx: Context) -> Dict[str, Any]:
         }
 
 @mcp.tool()
-async def mysql_buffer_pool_hit_ratio(ctx: Context) -> dict:
+async def mysql_buffer_pool_hit_ratio(ctx: Context):
     """Calculate and analyze InnoDB buffer pool hit ratio and efficiency."""
     try:
         db = ctx.lifespan["db"]
@@ -7148,7 +7152,7 @@ async def mysql_buffer_pool_hit_ratio(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_temp_table_usage(ctx: Context) -> dict:
+async def mysql_temp_table_usage(ctx: Context):
     """Analyze MySQL thread pool status and performance metrics."""
     try:
         db = ctx.lifespan["db"]
@@ -7190,7 +7194,7 @@ async def mysql_temp_table_usage(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_query_cache_performance(ctx: Context) -> dict:
+async def mysql_query_cache_performance(ctx: Context):
     """Analyze query cache hit ratio and efficiency metrics."""
     try:
         db = ctx.lifespan["db"]
@@ -7236,7 +7240,7 @@ async def mysql_query_cache_performance(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_deadlock_analysis(ctx: Context) -> dict:
+async def mysql_deadlock_analysis(ctx: Context):
     """Analyze recent deadlocks and lock contention patterns."""
     try:
         db = ctx.lifespan["db"]
@@ -7296,7 +7300,7 @@ async def mysql_deadlock_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_connection_thread_analysis(ctx: Context) -> dict:
+async def mysql_io_statistics_analysis(ctx: Context):
     """Analyze MySQL I/O statistics and disk usage patterns."""
     try:
         db = ctx.lifespan["db"]
@@ -7346,7 +7350,7 @@ async def mysql_connection_thread_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_memory_usage_breakdown(ctx: Context) -> dict:
+async def mysql_memory_usage_breakdown(ctx: Context):
     """Provide detailed breakdown of MySQL memory usage by component."""
     try:
         db = ctx.lifespan["db"]
@@ -7416,7 +7420,7 @@ async def mysql_memory_usage_breakdown(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_plugin_and_components_status(ctx: Context) -> dict:
+async def mysql_plugin_and_components_status(ctx: Context):
     """Show status of MySQL plugins and components."""
     try:
         db = ctx.lifespan["db"]
@@ -7474,7 +7478,7 @@ async def mysql_plugin_and_components_status(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_ssl_encryption_status(ctx: Context) -> dict:
+async def mysql_ssl_encryption_status(ctx: Context):
     """Analyze SSL/TLS encryption status and certificate information."""
     try:
         async with get_mysql_connection() as db:
@@ -7531,7 +7535,7 @@ async def mysql_ssl_encryption_status(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_binary_log_analysis(ctx: Context) -> dict:
+async def mysql_binary_log_analysis(ctx: Context):
     """Analyze binary log configuration, usage, and replication impact."""
     try:
         async with get_mysql_connection() as db:
@@ -7585,7 +7589,7 @@ async def mysql_binary_log_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_optimizer_statistics_analysis(ctx: Context) -> dict:
+async def mysql_optimizer_statistics_analysis(ctx: Context):
     """Analyze query optimizer statistics and histogram data."""
     try:
         async with get_mysql_connection() as db:
@@ -7666,7 +7670,7 @@ async def mysql_optimizer_statistics_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_backup_recovery_status(ctx: Context) -> dict:
+async def mysql_backup_recovery_status(ctx: Context):
     """Analyze backup and recovery configuration and status."""
     try:
         async with get_mysql_connection() as db:
@@ -7727,7 +7731,7 @@ async def mysql_backup_recovery_status(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_connection_audit_analysis(ctx: Context) -> dict:
+async def mysql_connection_audit_analysis(ctx: Context):
     """Perform security audit of connections, users, and access patterns."""
     try:
         async with get_mysql_connection() as db:
@@ -7833,7 +7837,7 @@ async def mysql_connection_audit_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_resource_consumption_analysis(ctx: Context) -> dict:
+async def mysql_resource_consumption_analysis(ctx: Context):
     """Analyze resource consumption patterns by users, databases, and operations."""
     try:
         async with get_mysql_connection() as db:
@@ -7932,7 +7936,7 @@ async def mysql_resource_consumption_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_innodb_lock_analysis(ctx: Context) -> dict:
+async def mysql_innodb_lock_analysis(ctx: Context):
     """Analyze InnoDB redo log and undo log configuration and usage."""
     try:
         async with get_mysql_connection() as db:
@@ -7988,7 +7992,7 @@ async def mysql_innodb_lock_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_adaptive_hash_index_analysis(ctx: Context) -> dict:
+async def mysql_adaptive_hash_index_analysis(ctx: Context):
     """Analyze InnoDB Adaptive Hash Index usage and effectiveness."""
     try:
         async with get_mysql_connection() as db:
@@ -8051,7 +8055,7 @@ async def mysql_adaptive_hash_index_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_event_scheduler_analysis(ctx: Context) -> dict:
+async def mysql_event_scheduler_analysis(ctx: Context):
     """Analyze MySQL Event Scheduler status, events, and execution history."""
     try:
         async with get_mysql_connection() as db:
@@ -8140,7 +8144,7 @@ async def mysql_event_scheduler_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_partition_management_analysis(ctx: Context) -> dict:
+async def mysql_partition_management_analysis(ctx: Context):
     """Analyze table partitioning configuration and partition statistics."""
     try:
         async with get_mysql_connection() as db:
@@ -8250,7 +8254,7 @@ async def mysql_partition_management_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_comprehensive_performance_summary(ctx: Context) -> dict:
+async def mysql_comprehensive_performance_summary(ctx: Context):
     """Generate a comprehensive performance summary combining multiple metrics."""
     try:
         async with get_mysql_connection() as db:
@@ -8413,7 +8417,7 @@ async def mysql_comprehensive_performance_summary(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_adaptive_index_fragmentation_analysis(ctx: Context) -> dict:
+async def mysql_adaptive_index_fragmentation_analysis(ctx: Context):
     """Performs an adaptive analysis of index fragmentation and provides recommendations."""
     try:
         db = ctx.lifespan["db"]
@@ -8441,7 +8445,7 @@ async def mysql_adaptive_index_fragmentation_analysis(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_query_pattern_clustering(ctx: Context) -> dict:
+async def mysql_query_pattern_clustering(ctx: Context):
     """Identifies clustered patterns and anomalies in query executions."""
     try:
         db = ctx.lifespan["db"]
@@ -8468,7 +8472,7 @@ async def mysql_query_pattern_clustering(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_deadlock_scenario_reconstruction(ctx: Context) -> dict:
+async def mysql_deadlock_scenario_reconstruction(ctx: Context):
     """Reconstructs detailed scenarios of recent deadlocks."""
     try:
         db = ctx.lifespan["db"]
@@ -8490,7 +8494,7 @@ async def mysql_deadlock_scenario_reconstruction(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_user_activity_patterns(ctx: Context) -> dict:
+async def mysql_user_activity_patterns(ctx: Context):
     """Analyzes granular user activity and access patterns."""
     try:
         db = ctx.lifespan["db"]
@@ -8516,7 +8520,7 @@ async def mysql_user_activity_patterns(ctx: Context) -> dict:
         }
 
 @mcp.tool()
-async def mysql_lock_wait_analysis(ctx: Context) -> dict:
+async def mysql_lock_wait_analysis(ctx: Context):
     """Analyzes historical and real-time lock wait scenarios."""
     try:
         db = ctx.lifespan["db"]
@@ -8542,4 +8546,4 @@ async def mysql_lock_wait_analysis(ctx: Context) -> dict:
         }
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
