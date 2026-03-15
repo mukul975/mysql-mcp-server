@@ -173,8 +173,12 @@ async def get_mysql_connection():
 @asynccontextmanager
 async def database_lifespan(server: FastMCP) -> AsyncIterator[Dict[str, Any]]:
     """Manage database connection lifecycle."""
-    async with get_mysql_connection() as conn:
-        yield {"db": conn, "config": conn.config}
+    try:
+        async with get_mysql_connection() as conn:
+            yield {"db": conn, "config": conn.config}
+    except Exception as e:
+        logging.warning(f"Database connection failed: {e}. Server will start without active connection.")
+        yield {"db": None, "config": None}
 
 
 # Create FastMCP server with database lifespan management
